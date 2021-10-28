@@ -103,8 +103,8 @@ elements is just [].
 
 You probably noticed that lists could be of any type of
 elements. Often you want to write a function that works with lists of
-any type (but consistent inside one list). This feature is called
-__parametric polymorphism__. It will be explained in more detail
+any types (but consistent inside one list). This feature is called
+__parametric polymorphism__. It will be explained in more details
 later, but when working with lists, you often will see type signatures
 like:
 
@@ -119,7 +119,7 @@ list with elements of the same type as the first list. Such words "a"
 and "b" are called __type variables__.
 
 For comparison, specific types in Haskell start with an uppercase
-letter (Int, Bool, Char, etc.), where type variables begin with a
+letter (Int, Bool, Char, etc.), when type variables begin with a
 lowercase letter (a, b, el, etc.). This is the way to distinguish
 between these types.
 
@@ -136,43 +136,52 @@ functions in GHCi and insert the corresponding resulting output below:
 
 List of booleans:
 >>> :t [True, False]
+[True, False] :: [Bool]
 
 
 String is a list of characters:
 >>> :t "some string"
+"some string" :: [Char]
 
 
 Empty list:
 >>> :t []
+[] :: [a]
 
 
 Append two lists:
 >>> :t (++)
+(++) :: [a] -> [a] -> [a]
 
 
 Prepend an element at the beginning of a list:
 >>> :t (:)
+(:) :: a -> [a] -> [a]
 
 
 Reverse a list:
 >>> :t reverse
+reverse :: [a] -> [a]
 
 
 Take first N elements of a list:
 >>> :t take
+take :: Int -> [a] -> [a]
 
 
-Create a list from N same elements:
+Create list from N same elements:
 >>> :t replicate
+replicate :: Int -> a -> [a]
 
 
 Split a string by line breaks:
 >>> :t lines
+lines :: String -> [String]
 
 
 Join a list of strings with line breaks:
 >>> :t unlines
-
+unlines :: [String] -> String
 
 -}
 
@@ -180,37 +189,37 @@ Join a list of strings with line breaks:
 =⚔️= Task 2
 
 To understand the list type better, it is also beneficial to play with
-list expressions in REPL.
+the list expressions in REPL.
 
 Evaluate the following expressions in GHCi and insert the answers. Try
 to guess first, what you will see.
 
 >>> [10, 2] ++ [3, 1, 5]
-
+[10,2,3,1,5]
 >>> [] ++ [1, 4]  -- [] is an empty list
-
+[1,4]
 >>> 3 : [1, 2]
-
+[3,1,2]
 >>> 4 : 2 : [5, 10]  -- prepend multiple elements
-
+[4,2,5,10]
 >>> [1 .. 10]  -- list ranges
-
+[1,2,3,4,5,6,7,8,9,10]
 >>> [10 .. 1]
-
+[]
 >>> [10, 9 .. 1]  -- backwards list with explicit step
-
+[10,9,8,7,6,5,4,3,2,1]
 >>> length [4, 10, 5]  -- list length
-
+3
 >>> replicate 5 True
-
+[True,True,True,True,True]
 >>> take 5 "Hello, World!"
-
+"Hello"
 >>> drop 5 "Hello, World!"
-
+", World!"
 >>> zip "abc" [1, 2, 3]  -- convert two lists to a single list of pairs
-
+[('a',1),('b',2),('c',3)]
 >>> words "Hello   Haskell     World!"  -- split the string into the list of words
-
+["Hello","Haskell","World!"]
 
 
 👩‍🔬 Haskell has a lot of syntax sugar. In the case with lists, any
@@ -259,7 +268,7 @@ values of variables you defined before.
 
 Let's talk a bit about list implementation details. Lists in Haskell
 are implemented as __linked lists__ (or cons-lists). And because
-everything in Haskell is immutable, adding elements at the beginning
+everything is Haskell is immutable, adding elements at the beginning
 of the lists is cheap. Haskell doesn't need to allocate new memory and
 copy the whole list there; it can just create a new list from a new
 element and a pointer to an already existing list. In other words,
@@ -269,7 +278,7 @@ For these reasons, adding elements to and extracting elements from the
 beginning of a list is much cheaper and faster than working with the
 end of the list.
 
-In some sense, lists are similar to trains. Let's look at an illustration
+In some sense, lists are similar to trains. Let's look at illustration
 of a two-element list:
 
               . . . . . o o o o o
@@ -325,7 +334,7 @@ Remember that each function returns a new list.
 []
 
 ♫ NOTE: When implementing, think about various corner cases. You
-  should return an empty list when given numbers that are negative.
+  should return an empty list when given numbers are negative.
 
 And also don't forget to check the 'Data.List' module. It is full of
 yummy functions.
@@ -336,7 +345,9 @@ from it!
 ghci> :l src/Chapter2.hs
 -}
 subList :: Int -> Int -> [a] -> [a]
-subList = error "subList: Not implemented!"
+subList from to l
+    | from < 0 || to < 0 || to < from = []
+    | otherwise = take (to - from + 1) (drop from l)
 
 {- |
 =⚔️= Task 4
@@ -348,8 +359,10 @@ Implement a function that returns only the first half of a given list.
 >>> firstHalf "bca"
 "b"
 -}
--- PUT THE FUNCTION TYPE IN HERE
-firstHalf l = error "firstHalf: Not implemented!"
+firstHalf :: [a] -> [a]
+firstHalf l =
+    let halfLen = div (length l) 2
+    in take halfLen l
 
 
 {- |
@@ -398,14 +411,13 @@ always matches (the same as a variable), but we don't use its value.
 
 👩‍🔬 Unlike 'switch' and 'case' in other languages, that try to go
   through each switch and perform all actions in there until it reaches
-  the breakpoint, pattern matching on function parameters in Haskell
-  always returns only a single expression for a single branch. You can
-  think of this process as trying to match all patterns from the first
-  one to the last one and returning the expression on the right side
-  of "=" only for the pattern that matches first. This is a helpful
-  thing to keep in mind, especially when you have overlapping patterns.
-  Also note that, if no pattern matches the value, the function fails
-  at runtime.
+  the breakpoint, 'case' in Haskell always returns only a single
+  expression for a single branch. You can think of this process as
+  trying to match all patterns from the first one to the last one and
+  returning the expression on the right side of "=" only for the pattern
+  that matches first. This is a helpful thing to keep in mind,
+  especially when you have overlapping patterns. Also note that, if no
+  pattern matches the value, the function fails in runtime.
 
 
 In addition to pattern matching in the function definition, you can
@@ -501,13 +513,15 @@ True
 >>> isThird42 [42, 42, 0, 42]
 False
 -}
-isThird42 = error "isThird42: Not implemented!"
+isThird42 :: [Int] -> Bool
+isThird42 (_ : _ : 42 : _) = True
+isThird42 _ = False
 
 
 {- |
 =🛡= Recursion
 
-Often, when writing in a functional style, you end up implementing
+Often, when writing in a functional style, you end up implementing the
 __recursive__ functions. Recursive functions are nothing more than
 calling the function itself from the body of the same function.
 
@@ -606,12 +620,13 @@ Implement a function that duplicates each element of the list
 
 -}
 duplicate :: [a] -> [a]
-duplicate = error "duplicate: Not implemented!"
+duplicate [] = []
+duplicate (x:xs) = x : x : duplicate xs
 
 
 {- |
 =⚔️= Task 7
-Write a function that takes elements of a list only in even positions.
+Write a function that takes elements of a list only on even positions.
 
 🕯 HINT: You need to write a recursive function that pattern matches
   on the list structure. Your function will have several cases and
@@ -621,7 +636,10 @@ Write a function that takes elements of a list only in even positions.
 >>> takeEven [2, 1, 3, 5, 4]
 [2,3,4]
 -}
-takeEven = error "takeEven: Not implemented!"
+takeEven :: [a] -> [a]
+takeEven [] = []
+takeEven [x] = [x]
+takeEven (x : _ : xs) = x : takeEven xs
 
 {- |
 =🛡= Higher-order functions
@@ -652,13 +670,13 @@ the same way as any other values and expressions:
  ✲ And much more!
 
 The ability to create __lambdas__ (or anonymous functions) nicely
-complements the concept of HOF. For example, we can easily add
+complements the concept of HOF. For example, we can easily append
 number 3 to each element of the list by introducing a lambda function:
 
 >>> map (\x -> x + 3) [0..5]
 [3,4,5,6,7,8]
 
-The syntax of lambda functions is somewhat similar to normal ones,
+The syntax of the lambda functions is somewhat similar to normal ones,
 except for you don't need to think about its name, which is
 awesome. To establish the start of the lambda function, you should
 write "\" which is a bit similar to the lambda symbol — λ. Then you
@@ -666,7 +684,7 @@ specify space-separated arguments. Instead of the "=" in the ordinary
 function body, you should write "->" and then you can use these
 arguments and all variables in scope inside the lambda-body.
 
-These are equal:
+There are equal:
 
 @
 foo a b = a + b
@@ -719,7 +737,7 @@ Now you can see that there is nothing magic in HOFs in the end!
 {- |
 =⚔️= Task 8
 
-Implement a function that repeats each element as many times as the
+Implement a function that repeats each element so many times as the
 value of the element itself
 
 >>> smartReplicate [3, 1, 2]
@@ -728,7 +746,7 @@ value of the element itself
 🕯 HINT: Use combination of 'map' and 'replicate'
 -}
 smartReplicate :: [Int] -> [Int]
-smartReplicate l = error "smartReplicate: Not implemented!"
+smartReplicate = concatMap (\x -> replicate x x)
 
 {- |
 =⚔️= Task 9
@@ -741,7 +759,8 @@ the list with only those lists that contain a passed element.
 
 🕯 HINT: Use the 'elem' function to check whether an element belongs to a list
 -}
-contains = error "contains: Not implemented!"
+contains :: Int -> [[Int]] -> [[Int]]
+contains x = filter (elem x)
 
 
 {- |
@@ -781,13 +800,15 @@ Let's now try to eta-reduce some of the functions and ensure that we
 mastered the skill of eta-reducing.
 -}
 divideTenBy :: Int -> Int
-divideTenBy x = div 10 x
+divideTenBy = div 10
 
 -- TODO: type ;)
-listElementsLessThan x l = filter (< x) l
+listElementsLessThan :: Int -> [Int] -> [Int]
+listElementsLessThan x = filter (< x)
 
 -- Can you eta-reduce this one???
-pairMul xs ys = zipWith (*) xs ys
+pairMul :: [Int] -> [Int] -> [Int]
+pairMul = zipWith (*)
 
 {- |
 =🛡= Lazy evaluation
@@ -796,7 +817,7 @@ Another unique Haskell feature is __lazy evaluation__. Haskell is lazy
 by default, which means that it doesn't evaluate expressions when not
 needed. The lazy evaluation has many benefits: avoid doing redundant
 work, provide more composable interfaces. And in this section, we will
-focus on Haskell's ability to create infinite data structures and work
+focus on Haskell ability to create infinite data structures and work
 with them!
 
 For instance, the Haskell standard library has the 'repeat' function
@@ -842,7 +863,13 @@ list.
 
 🕯 HINT: Use the 'cycle' function
 -}
-rotate = error "rotate: Not implemented!"
+rotate :: Int -> [a] -> [a]
+rotate n l
+    | n < 0 = []
+    | null l = []
+    | otherwise =
+        let len = length l
+        in take len (drop (mod n len) (cycle l))
 
 {- |
 =💣= Task 12*
@@ -858,10 +885,15 @@ and reverses it.
   function, but in this task, you need to implement it manually. No
   cheating!
 -}
-rewind = error "rewind: Not Implemented!"
+rewind :: [a] -> [a]
+rewind = go []
+  where
+    go :: [a] -> [a] -> [a]
+    go res [] = res
+    go res (x:xs) = go (x : res) xs
 
 
 {-
-You did it! Now it is time to open pull request with your changes
+You did it! Now it is time to the open pull request with your changes
 and summon @vrom911 and @chshersh for the review!
 -}
